@@ -12,10 +12,6 @@ fun LoginScreen(
     doNav: (NavigationEvent) -> Unit
 ) {
 
-    if (state is LoginViewModel.State.Success) {
-        doNav(NavigationEvent.ToHome)
-    }
-
     Column {
 
         var email = ""

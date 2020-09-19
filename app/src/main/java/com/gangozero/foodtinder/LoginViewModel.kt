@@ -5,16 +5,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.gangozero.foodtinder.App.Companion.repository
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 
 class LoginViewModel : ViewModel() {
 
-    private val repository = Repository()
-
-    var sZed: State by mutableStateOf(State.Idle)
+    var state: State by mutableStateOf(State.Idle)
         private set
 
     sealed class State {
@@ -29,13 +29,16 @@ class LoginViewModel : ViewModel() {
         viewModelScope.launch {
             repository.login(loginData)
                 .onStart {
-                    sZed = State.Loading
+                    state = State.Loading
                 }
                 .catch {
-                    sZed = State.Error(it)
+                    state = State.Error(it)
+                }
+                .onCompletion {
+                    state = State.Idle
                 }
                 .collect {
-                    sZed = State.Success
+                    state = State.Success
                 }
         }
     }
