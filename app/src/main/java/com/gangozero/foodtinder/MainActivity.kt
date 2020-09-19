@@ -10,24 +10,22 @@ import androidx.compose.material.TextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.setContent
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.lifecycle.ViewModel
 import androidx.ui.tooling.preview.Preview
 import com.gangozero.foodtinder.ui.FoodtinderTheme
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
 
 class MainActivity : AppCompatActivity() {
 
     var loggedIn = false
 
     val viewModel by viewModels<LoginViewModel>()
+    val navVm by viewModels<NavVm>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContent {
-            LoginScreen(viewModel.sZed) { viewModel.login(it) }
+            Router(navVm.state, navVm, viewModel)
         }
 
 //        if (loggedIn) {
@@ -51,6 +49,45 @@ class MainActivity : AppCompatActivity() {
     }
 }
 
+@Composable
+fun Router(state: NavigationEvent, navVm: NavVm, loginVm: LoginViewModel) {
+    if (state is NavigationEvent.ToLogin) {
+        LoginScreen(state = loginVm.sZed, { loginVm.login(it) }, { navVm.updateState(it) })
+    } else if (state is NavigationEvent.ToHome) {
+        HomeScreen()
+    }
+}
+
+class NavVm : ViewModel() {
+    var state: NavigationEvent by mutableStateOf(NavigationEvent.ToLogin)
+        private set
+
+    fun updateState(e: NavigationEvent) {
+        state = e
+    }
+}
+
+sealed class Screen {
+    object Login : Screen()
+    object Home : Screen()
+}
+
+sealed class NavigationEvent {
+    object ToLogin : NavigationEvent()
+    object ToHome : NavigationEvent()
+}
+
+//@Composable
+//fun Root(state: LoginViewModel.State, viewModel: LoginViewModel, navVm: NavVm) {
+//    if (state is LoginViewModel.State.Success) {
+//        HomeScreen()
+//    } else if (state is LoginViewModel.State.Idle) {
+//        LoginScreen(state, { viewModel.login(it) }, {
+//            navVm.updateState(it)
+//        })
+//    }
+//}
+
 
 @Composable
 fun EditField(label: String, onChange: (String) -> Unit, initValue: String = "") {
@@ -66,7 +103,15 @@ fun EditField(label: String, onChange: (String) -> Unit, initValue: String = "")
 data class LoginData(val email: String, val password: String, val address: String)
 
 @Composable
-fun LoginScreen(state: LoginViewModel.State, onLogin: (LoginData) -> Unit) {
+fun LoginScreen(
+    state: LoginViewModel.State,
+    onLogin: (LoginData) -> Unit,
+    doNav: (NavigationEvent) -> Unit
+) {
+
+    if (state is LoginViewModel.State.Success) {
+        doNav(NavigationEvent.ToHome)
+    }
 
     Column {
 
@@ -106,17 +151,8 @@ fun LoginScreen(state: LoginViewModel.State, onLogin: (LoginData) -> Unit) {
     }
 }
 
-data class Product(val id: String)
-data class User(val id: String)
-
-
-
-
-
-
-
 @Composable
-fun MainScreen() {
+fun HomeScreen() {
 
 }
 
